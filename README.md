@@ -14,7 +14,7 @@ Dans chaque dossier correspondant (Anova/Regression lineaire), on peut trouver 3
 
 Les 3 fichiers consistent en:
 - .html: le cours au format html
-- .Rmd: le code sourcedu document RMarkDown, s'ouvre avec Rstudio. Voir [link1]https://www.jacolienvanrij.com/Tutorials/tutorialMarkdown.html ou [link2]https://rmarkdown.rstudio.com/
+- .Rmd: le code source du document RMarkDown, s'ouvre avec Rstudio. Voir [link1](https://www.jacolienvanrij.com/Tutorials/tutorialMarkdown.html) ou [link2](https://rmarkdown.rstudio.com/)
 - .css: fichier nécessaire pour reproduire le doc markdown(il s'agit d'un fichier de config de l'apparence finale du doc)
 
 ## Contenu des dossiers
