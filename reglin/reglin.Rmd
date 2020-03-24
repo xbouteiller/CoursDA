@@ -1,0 +1,434 @@
+---
+title: "RegressionLineaire"
+
+author: Xavier Bouteiller
+  
+date: March 27, 2020
+
+output:
+  revealjs::revealjs_presentation:
+    fig_width: 5
+    fig_height: 4
+    fig_caption: false
+    theme: simple
+    highlight: haddock
+    center: false
+    transition: slide
+    css: reveal2.css
+    self_contained: True
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE)
+```
+
+
+```{r setWD, include=TRUE, echo=FALSE}
+setwd("~/DU/reglin")
+```
+
+# Needed packages
+
+```{r package}
+library(ggplot2)
+library(dplyr)
+library(broom)
+```
+
+
+# Exercice 1 : Chenille et taux de tanin dans les feuilles
+
+## Charger les données
+
+
+<div class="left">
+```{r data_vigne, eval=FALSE, include=TRUE, echo=TRUE}
+DATAs0 <-read.table("./data/DATAcater.csv",
+                    header=TRUE, sep=";", dec=",")
+
+head(DATAs0)
+str(DATAs0)
+```
+</div>
+<div class="right">
+    ```{r data_vigne_exe, message=FALSE, warning=FALSE, include=TRUE, echo=FALSE, collapse=FALSE}
+    DATAs0 <-read.table("./data/DATAcater.csv",
+                    header=TRUE, sep=";", dec=",")
+
+    head(DATAs0)
+    str(DATAs0)
+    ```
+</div>
+
+
+## Figures
+
+<div class="left">
+```{r vigne_fig, eval=FALSE, include=TRUE, echo=TRUE}
+plot(DATAs0$CROISSANCE~DATAs0$TANIN,
+      bty = "l", # type de cadre
+      pch= 20, # type de point
+      col="darkblue", # couleur des points
+      xlab="Concentration en tanin des feuilles", # titre de x
+      ylab="Taille des chenilles")
+```
+</div>
+<div class="right">
+```{r vigne_fig_display, include=TRUE, echo=FALSE}
+plot(DATAs0$CROISSANCE~DATAs0$TANIN,
+      bty = "l", # type de cadre
+      pch= 20, # type de point
+      col="darkblue", # couleur des points
+      xlab="Concentration en tanin des feuilles", # titre de x
+      ylab="Taille des chenilles")
+```
+</div>
+
+
+## Démarche statistiques
+
+\
+\
+
+1. Question bio
+2. Hypothèses
+3. Choix du test
+4. Réalisation du test & validation
+5. Conclusion
+
+
+## 1. Question bio
+
+\
+\
+
+Existe-t-il une relation entre la taille des chenilles et la concentration en tanin des feuilles?
+
+## 2. Hypothèses
+
+\
+\
+
+H0 : pas de relation linéaire entre X et Y 
+\
+
+$$y_{i} =  \beta_{0} + \epsilon_{i}$$
+\
+
+H1 : il existe une relation entre X et Y
+
+\
+
+$$y_{i} =  \beta_{0} + \beta_{1} \times X_{i} + \epsilon_{i}$$
+
+## 3. Choix du test
+
+\
+\
+**regression lineaire**: 2 variables **quantitatives** continues 
+
+
+## 4. Réalisation du test & validation
+
+\
+\
+
+### Realisation du modele
+le modele lineaire peut être fait avec la fonction
+*aov()* ou *lm()*
+
+```{r anova}
+lm1 <- lm(CROISSANCE~TANIN, data = DATAs0)
+```
+
+```{r anova2}
+lm1_bis <- aov(CROISSANCE~TANIN, data = DATAs0)
+```
+
+Résultat identique, des différences dans la manipulation des objets créés
+
+
+## validation 
+
+<div class="left">
+```{r valid, eval=FALSE, include=TRUE, echo=TRUE}
+par(mfrow=c(2,2))
+plot(lm1)
+```
+</div>
+<div class="right">
+```{r valid_display, include=TRUE, echo=FALSE}
+par(mfrow=c(2,2))
+plot(lm1) 
+```
+</div>
+
+## Interpretation
+
+Interpretation **ssi** le modèle est valide
+
+
+
+```{r summ_anova, results='asis'}
+knitr::kable(broom::tidy(summary(lm1)))
+```
+
+
+
+
+```{r summ_anova2bis}
+knitr::kable(broom::tidy(anova(lm1)))
+```
+
+
+
+## 5. Conclusion
+
+\
+
+- F=3.96
+- p=6.7 $10^{-06}$ < 0.05 
+
+\
+
+Il existe un lien entre y (*croissance des chenilles*) et x(*concntration en tanin*)
+$\rightarrow$ un au moins des $\beta_{1}$ est différent de 0
+
+\
+
+L'équation de la droite de régression est :
+
+$$y_{i} = 61.13 -0.93 \times X_{i} + \epsilon_{i}$$
+\
+
+Le coeff de la pente de régression est 
+
+$\beta_{1}$=-0.932782
+
+Le signe est négatif, donc plus le taux de tanin $\nearrow$, plus la taille des chenilles $\searrow$
+
+
+## 6. Extraire les coefficients estimés
+
+```{r mean_grp}
+## intercept & slope
+coef(lm1)
+```
+
+
+## 7. Fitted values?
+
+### fonction fitted()
+```{r fitted}
+## chaque observation a comme fitted values la 'moyenne' de son groupe
+knitr::kable(fitted(lm1)[1:10])
+```
+Les fitted values correspondent aux valeurs prédites par le modèle, soit pour une valeur X donnée, Y la valeur prédite
+
+$$y = 61.13 -0.93 \times X$$
+Notez l'absence du résidus $\epsilon$
+
+ex: si le taux de tanin est 5, la valeur prédite par le modèle pour la taille des chenilles est:
+
+$$y = 61.13 -0.93 \times 5 = 56.48$$
+
+## 8. Bonus: Retrouvons le résultat manuellement
+
+
+<div class="left">
+```{r anova_vigne_code, eval=FALSE, include=TRUE, echo=TRUE}
+par(mfrow = c(1,1))
+  
+plot(DATAs0$CROISSANCE~DATAs0$TANIN,
+       bty = "l", # type de cadre
+       pch= 20, # type de point
+       col="darkblue", # couleur des points
+       xlab="Concentration en tanin des feuilles", # titre de x
+       ylab="Taille des chenilles") # titre de y
+  
+#moyenne generale = modele nul
+abline(h=mean(DATAs0$CROISSANCE), col = 'red', lwd = 2)
+
+#droite ajustee
+abline(lm1, col = 'green', lwd = 2)
+
+# pour une point (ex le point 15)
+
+point_to_print= 15
+point_to_print= c(15,20,25,30,35,40)
+
+#var totale
+segments(x0= DATAs0$TANIN[point_to_print]-0.1 , y0= DATAs0$CROISSANCE[point_to_print],
+         x1= DATAs0$TANIN[point_to_print]-0.1 , y1 = mean(DATAs0$CROISSANCE) , lwd = 2,  col = 'red')
+
+
+#var expliquée
+segments(x0= DATAs0$TANIN[point_to_print]+0.1 , y0= lm1$fitted.values[point_to_print],
+         x1= DATAs0$TANIN[point_to_print]+0.1 , y1 = mean(DATAs0$CROISSANCE) , lwd = 2,  col = 'green')
+
+#var résiduelle
+segments(x0= DATAs0$TANIN[point_to_print]+0.1 , y0=  DATAs0$CROISSANCE[point_to_print],
+         x1= DATAs0$TANIN[point_to_print]+0.1 , y1 = lm1$fitted.values[point_to_print] , lwd = 2,  col = 'cyan')
+
+```
+</div>
+<div class="right">
+```{r anova_vigne_display, include=TRUE, echo=FALSE}
+par(mfrow = c(1,1))
+  
+plot(DATAs0$CROISSANCE~DATAs0$TANIN,
+       bty = "l", # type de cadre
+       pch= 20, # type de point
+       col="darkblue", # couleur des points
+       xlab="Concentration en tanin des feuilles", # titre de x
+       ylab="Taille des chenilles") # titre de y
+  
+#moyenne generale = modele nul
+abline(h=mean(DATAs0$CROISSANCE), col = 'red', lwd = 2)
+
+#droite ajustee
+abline(lm1, col = 'green', lwd = 2)
+
+# pour une point (ex le point 15)
+
+point_to_print= 15
+point_to_print= c(15,20,25,30,35,40)
+
+#var totale
+segments(x0= DATAs0$TANIN[point_to_print]-0.1 , y0= DATAs0$CROISSANCE[point_to_print],
+         x1= DATAs0$TANIN[point_to_print]-0.1 , y1 = mean(DATAs0$CROISSANCE) , lwd = 2,  col = 'red')
+
+
+#var expliquée
+segments(x0= DATAs0$TANIN[point_to_print]+0.1 , y0= lm1$fitted.values[point_to_print],
+         x1= DATAs0$TANIN[point_to_print]+0.1 , y1 = mean(DATAs0$CROISSANCE) , lwd = 2,  col = 'green')
+
+#var résiduelle
+segments(x0= DATAs0$TANIN[point_to_print]+0.1 , y0=  DATAs0$CROISSANCE[point_to_print],
+         x1= DATAs0$TANIN[point_to_print]+0.1 , y1 = lm1$fitted.values[point_to_print] , lwd = 2,  col = 'cyan')
+
+```
+</div>
+
+## Variance totale, expliquée et résiduelle
+
+```{r var_totale}
+    #variation totale (ici en rouge)
+
+SCET <- sum((DATAs0$CROISSANCE - mean(DATAs0$CROISSANCE))^2) ; SCET
+
+  #variation expliquée
+SCER <- sum((lm1$fitted.values - mean(DATAs0$CROISSANCE))^2) ; SCER
+
+
+  #Variation residuelle
+SCEE <- sum((lm1$fitted.values - DATAs0$CROISSANCE)^2);  SCEE
+```
+
+
+```{r summ_anova2}
+knitr::kable(broom::tidy(anova(lm1)))
+```
+
+## Test de Fisher: F statistic
+
+F calculée
+
+```{r F calc}
+Fcalc = (SCER/1) / (SCEE /(nrow(DATAs0)-2)) ; Fcalc
+```
+
+```{r F critique}
+Fcrit = qf(0.95,df1=1,df2=84-2)
+Fcrit
+```
+
+Fcalc > Fcrit $\rightarrow$ pvalue < 0.05 (seuil prédéfini)
+
+
+# Exercice 2: comprendre la significativité des coefficients et l'intensité d'une relation
+
+
+
+<div class="left">
+```{r anova_vigne_code2, eval=FALSE, include=TRUE, echo=TRUE}
+X = seq (0,100, by = 1)
+Y1 = X
+Y2 = X + rnorm(n = length(X), mean = 1 , sd = 2)
+Y3 = X + rnorm(n = length(X), mean = 1 , sd = 10)
+Y4 = rnorm(n =length(X), mean = 1 , sd = 2)
+
+lm1 <- lm(Y1 ~ X)
+lm2 <- lm(Y2 ~ X)
+lm3 <- lm(Y3 ~ X)
+lm4 <- lm(Y4 ~ X)
+
+par(mfrow= c(2,2))
+plot(Y1 ~ X, pch= 20,col="darkblue", 
+     main=paste('R2=', round(summary(lm1)$r.squared,2)))
+plot(Y2 ~ X, pch= 20, col="darkblue", 
+     main=paste('R2=', round(summary(lm2)$r.squared,2)))
+plot(Y3 ~ X, pch= 20, col="darkblue", 
+     main=paste('R2=', round(summary(lm3)$r.squared,2)))
+plot(Y4 ~ X, pch= 20, col="darkblue", 
+     main=paste('R2=', round(summary(lm4)$r.squared,2)))
+
+```
+</div>
+<div class="right">
+```{r anova_vigne_display2, include=TRUE, echo=FALSE}
+X = seq (0,100, by = 1)
+Y1 = X
+Y2 = X + rnorm(n = length(X), mean = 1 , sd = 2)
+Y3 = X + rnorm(n = length(X), mean = 1 , sd = 10)
+Y4 = rnorm(n =length(X), mean = 1 , sd = 2)
+
+lm1 <- lm(Y1 ~ X)
+lm2 <- lm(Y2 ~ X)
+lm3 <- lm(Y3 ~ X)
+lm4 <- lm(Y4 ~ X)
+
+par(mfrow= c(2,2))
+plot(Y1 ~ X, pch= 20,col="darkblue", 
+     main=paste('R2=', round(summary(lm1)$r.squared,2)))
+plot(Y2 ~ X, pch= 20, col="darkblue", 
+     main=paste('R2=', round(summary(lm2)$r.squared,2)))
+plot(Y3 ~ X, pch= 20, col="darkblue", 
+     main=paste('R2=', round(summary(lm3)$r.squared,2)))
+plot(Y4 ~ X, pch= 20, col="darkblue", 
+     main=paste('R2=', round(summary(lm4)$r.squared,2)))
+
+```
+</div>
+
+# A vous de jouer
+
+## Tableau de données « meteo.csv ».
+
+Question 1 :
+
+-	A) existe-il une relation entre la température annuelle moyenne (Temperature_an, variable dépendante) et la latitude (Latitude, variable indépendante) ?
+-	B) Tracer sur le graphique la droite ajustée par la régression linéaire (si la relation est significative)
+-	C) Que vaut le coefficient R² ?
+
+Question 2 :
+
+-	A) existe-il une relation entre la précipitation annuelle moyenne (Precipitations, variable dépendante) et la latitude (Latitude, variable indépendante) ?
+-	B) Tracer sur le graphique la droite ajustée par la régression linéaire (si la relation est significative)
+-	C) comparer la valeur du coefficient R² calculé à la question 1 et à la question 2, qu’en pensez-vous ?
+
+## Tableau de données « crime.csv »
+
+Explication du tableau dans «crime_data_summary.docx »
+
+Question 1 :
+
+-	A) existe-il une relation entre le taux de criminalité (CrimeRate, variable dépendante) et le taux d’homme (nombre d’homme pour 1000 femmes latitude) (Males, variable indépendante) ?
+-	B) Tracer sur le graphique la droite ajustée par la régression linéaire (si la relation est significative)
+-	C) Que vaut le coefficient R² ?
+
+Question 2 :
+
+-	A) existe-il une relation entre le taux de criminalité (CrimeRate, variable dépendante) et le salaire médian hebdomadaire (Wage, variable indépendante) ?
+-	B) Tracer sur le graphique la droite ajustée par la régression linéaire (si la relation est significative)
+-	C) Que vaut le coefficient R² ?

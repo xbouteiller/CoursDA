@@ -1,0 +1,397 @@
+---
+title: "Anova"
+author: Xavier Bouteiller
+  
+date: March 27, 2020
+
+output:
+  revealjs::revealjs_presentation:
+    fig_width: 5
+    fig_height: 4
+    fig_caption: false
+    theme: simple
+    highlight: haddock
+    center: false
+    transition: slide
+    css: reveal2.css
+    self_contained: True
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo=TRUE, message=FALSE, warning=FALSE, collapse=FALSE)
+```
+
+
+```{r setWD, include=TRUE, echo=FALSE}
+setwd("~/DU/anova")
+```
+
+# Needed packages
+
+```{r package}
+library(ggplot2)
+library(dplyr)
+library(broom)
+```
+
+
+# Exercice 1 : rendement vigne
+
+## Charger les données
+
+
+<div class="left">
+```{r data_vigne, eval=FALSE, include=TRUE, echo=TRUE}
+Vigne <-read.table(
+          "./data/rendements_vigne.csv", 
+          sep = ";", dec = ".", 
+          header = TRUE)
+
+head(Vigne)
+str(Vigne)
+```
+</div>
+<div class="right">
+    ```{r data_vigne_exe, message=FALSE, warning=FALSE, include=TRUE, echo=FALSE, collapse=FALSE}
+    Vigne <-read.table(
+                    "./data/rendements_vigne.csv", 
+                    sep = ";", dec = ".", 
+                    header = TRUE)
+    head(Vigne)
+    str(Vigne)
+    ```
+</div>
+
+
+## Figures
+
+<div class="left">
+```{r vigne_fig, eval=FALSE, include=TRUE, echo=TRUE}
+boxplot(Vigne[,2] ~ Vigne[,3])
+boxplot(Vigne$Rendement ~ Vigne$Pesticide)
+boxplot(Vigne[,"Rendement"] ~ Vigne[,"Pesticide"])
+```
+</div>
+<div class="right">
+```{r vigne_fig_display, include=TRUE, echo=FALSE}
+Vigne %>% ggplot(aes(y=Rendement, x=Pesticide)) + geom_boxplot() 
+```
+</div>
+
+
+## Principes de l'ANOVA
+
+<div class="left">
+```{r anova_vigne_code, eval=FALSE, include=TRUE, echo=TRUE}
+
+                 stripchart(Vigne$Rendement ~ Vigne$Pesticide,
+                            vertical = TRUE, 
+                            pch = 20, 
+                            xlim = c(0,5), 
+                            col = "black",
+                            xlab = "Traitement",
+                            ylab = "Rendement")
+                 #moyenne générale
+                 abline(h= mean(Vigne$Rendement), 
+                        col = "red", 
+                        lwd = 3)
+                 #moyenne des groupes
+                 tapply(Vigne$Rendement, 
+                        Vigne$Pesticide, mean)
+                 segments(x0= c(0.5,1.5,2.5,3.5),
+                          x1 = c(1.5,2.5,3.5, 4.5), 
+                          y0=tapply(Vigne$Rendement, 
+                                    Vigne$Pesticide, mean),
+                          y1=tapply(Vigne$Rendement, 
+                                    Vigne$Pesticide, mean),
+                          col = c("blue", "green", "orange", "purple"), 
+                                  lwd = 3)
+```
+</div>
+<div class="right">
+```{r anova_vigne_display, include=TRUE, echo=FALSE}
+
+                 stripchart(Vigne$Rendement ~ Vigne$Pesticide, vertical = TRUE, 
+                            pch = 20, xlim = c(0,5), col = "black",
+                            xlab = "Traitement", ylab = "Rendement")
+                 
+                 #moyenne générale
+                 abline(h= mean(Vigne$Rendement), col = "red", lwd = 3)
+                 
+                 #moyenne des groupes
+                 tapply(Vigne$Rendement , Vigne$Pesticide, mean)
+                 segments(x0= c(0.5,1.5,2.5,3.5),
+                          x1 = c(1.5,2.5,3.5, 4.5), 
+                          y0=tapply(Vigne$Rendement , Vigne$Pesticide, mean),
+                          y1=tapply(Vigne$Rendement , Vigne$Pesticide, mean),
+                          col = c("blue", "green", "orange", "purple"), lwd = 3)
+```
+</div>
+
+
+## Démarche statistiques
+
+\
+\
+
+1. Question bio
+2. Hypothèses
+3. Choix du test
+4. Réalisation du test & validation
+5. Conclusion
+
+
+## 1. Question bio
+
+\
+\
+
+Existe-t-il une différence significative de
+rendement moyen de la vigne selon les différents traitements?
+
+## 2. Hypothèses
+
+\
+\
+
+H0 : toutes les moyennes sont identiques 
+\
+
+$$y_{ij} =  \mu + \epsilon_{ij}$$
+\
+
+H1 : au moins une des moyennes testées est différentes significativement
+\
+
+$$y_{ij} =  \mu + \alpha_{i} + \epsilon_{ij}$$
+
+## 3. Choix du test
+
+\
+\
+**ANOVA**: variable **quantitative** continue et var **qualitative** nominale (facteur) à 4 modalités
+
+
+## 4. Réalisation du test & validation
+
+\
+\
+
+### Realisation du modele
+le modele lineaire peut être fait avec la fonction
+*aov()* ou *lm()*
+
+```{r anova}
+lm1 <- lm(Rendement ~ Pesticide, 
+		  data = Vigne)
+```
+
+```{r anova2}
+lm1_bis <- aov(Rendement ~ Pesticide, 
+		  data = Vigne)
+```
+
+Résultat identique, des différences dans la manipulation des objets créés
+
+
+## validation et interpretation
+
+<div class="left">
+```{r valid, eval=FALSE, include=TRUE, echo=TRUE}
+par(mfrow=c(2,2))
+plot(lm1)
+```
+</div>
+<div class="right">
+```{r valid_display, include=TRUE, echo=FALSE}
+par(mfrow=c(2,2))
+plot(lm1) 
+```
+</div>
+
+<div class="right">
+
+\
+\
+\
+\
+
+Interpretation ssi le modèle est valide
+
+\
+
+```{r summ_anova, class="right"}
+anova(lm1)
+```
+</div>
+
+
+## 5. Conclusion
+\
+\
+
+
+- F=34.11
+- p=7.03 $10^{-16}$ < 0.05 
+\
+\
+
+Il existe au moins une des moyennes différentes des autres \
+(un au moins des $\alpha_{i}$ est différent de 0)
+
+
+## 6. A quoi correspondent les coefficients estimés?
+
+### Moyenne par groupe
+```{r mean_grp}
+## Moyenne par traitement
+knitr::kable(tapply(Vigne$Rendement,Vigne$Pesticide,mean))
+```
+
+\
+
+### Coefficients estimés : les $\alpha_{i}$
+```{r coeff}
+## coefficients estimés les alpha_{i}
+knitr::kable(coef(lm1))
+```
+
+
+## 7. Fitted values?
+
+### fonction fitted()
+```{r fitted}
+## chaque observation a comme fitted values la 'moyenne' de son groupe
+knitr::kable(table(round(fitted(lm1),2)))
+```
+
+\
+
+### fonction residuals()
+```{r residuals}
+## (fitted + residus) - valeur réelle
+## les résidus correspondent bien à l'écart entre la fitted values et la valeur réelle
+sum((fitted(lm1)+residuals(lm1)) - Vigne$Rendement)
+```
+
+## Retrouvons manuellement le résultat du test
+
+## Paramètres, ddl
+
+```{r ddl}
+
+MuVigne <- mean(Vigne$Rendement) ; MuVigne
+n <- nrow(Vigne) ; n
+k <- nlevels(Vigne$Pesticide) ; k
+```
+
+
+## Variance totale, expliquée et résiduelle
+
+
+<div class="left">
+```{r var_totale}
+
+# Variation totale (ici en rouge)
+SCT <- sum((Vigne$Rendement - MuVigne)^2) ; 
+SCT
+
+# variation expliquée
+MuPest<-tapply(Vigne$Rendement , Vigne$Pesticide, mean)
+MuPest
+SCE <- sum(table(Vigne$Pesticide)*(MuPest - MuVigne)^2) 
+SCE
+
+# Variation residuelle
+SCI <- SCT - SCE ; 
+SCI
+
+```
+</div>
+
+<div class="right">
+```{r summ_anova2}
+anova(lm1)
+```
+</div>
+
+## Mean Square
+
+```{r MS}
+# Variation totale (ici en rouge)
+MSCT <- SCT  / (n-1) ; MSCT
+
+# variation expliquée
+MSCE <- SCE / (k - 1) ; MSCE
+
+# Variation residuelle
+MSCI <- SCI / (n -k) ; MSCI
+```
+
+## F value
+
+```{r Fvalue}
+Fcalc <- MSCE  / MSCI ; Fcalc
+```
+
+```{r Fthe}
+Fcrit = qf(0.95,df1=k-1, df2=n-k)
+Fcrit
+```
+
+Fcalc > Fcritique $\rightarrow$ p < 0.05
+
+On rejette H0 ...
+
+
+## Test post Hoc
+
+une fois qu'on a rejeté H0 et montré qu'au moins une des moyennes était différente, on peut faire un test post-Hoc
+
+```{r test_post_hoc}
+# Ne fonctionne qu'avec un objet créée avec aov() et pas avec lm()
+lm1_bis <- aov(Rendement ~ Pesticide, data = Vigne)
+# le test post Hoc est réalisé avec la fonction TukeyHSD()
+knitr::kable(TukeyHSD(lm1_bis)$Pesticide)
+
+```
+
+\
+\
+
+Le test post Hoc s'interpète comme un comparaison 2 à 2 des valeurs moyennes avec les hypothèses:
+
+- H0: les 2 valeurs moyennes sont identiques
+- H1: les 2 valeurs moyennes sont significativement différentes
+
+Ici il existe une différence entre toutes les modalités sauf:
+
+- Témoin - Pesticide A (p= 0.07 > 0.05)
+
+
+
+# A vous de jouer
+
+\
+
+- Exercice 2 : DATA.csv
+
+Existe-t-il une différence de taille moyenne pour au moins l’un des groupes ?
+
+\
+
+- Exercice 3 Diet.csv
+
+Description du tableau dans Diet_data_description.docx
+
+Quel régime est le meilleur pour perdre du poids ?
+
+Existe-t-il une différence de perte de poids entre les deux sexes ?
+
+\
+
+- Exercice 4 : Tomato1.csv
+
+Description du tableau Tomato_Rooting_data_description.docx
+Existe-t-il des différences de croissance entre la croissance moyenne des racines entre les 3 lignées M82, A et B 
+
